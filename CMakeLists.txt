@@ -5,12 +5,14 @@ project("thing"
   DESCRIPTION "A library for maintaining attribute buffers."
   HOMEPAGE_URL "https://github.com/anthony-arnold/thing")
 
+set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
+
 include(GNUInstallDirs)
 
 add_library(thing INTERFACE)
 
 target_include_directories(thing INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/.>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_compile_features(thing INTERFACE cxx_std_20)
@@ -41,3 +43,6 @@ install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/thing DESTINATION include)
+
+enable_testing()
+add_subdirectory(tests)
