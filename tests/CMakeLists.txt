@@ -37,3 +37,9 @@ new_test_static_fail(context/no_properties.cpp)
 new_test(context/basic_system.cpp)
 new_test(context/system_resize.cpp)
 new_test(context/zero_system.cpp)
+
+
+# Iterator
+new_test(iterator/range_based_assign.cpp)
+new_test(iterator/range_based_for.cpp)
+new_test(iterator/iterate_over.cpp)
