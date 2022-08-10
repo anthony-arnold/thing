@@ -38,6 +38,16 @@ auto make_entity(TSystem& system, size_t index) {
    return entity(system, index);
 }
 
+template <typename TTag, typename TEntity>
+auto& get(TEntity&& entity, TTag) {
+   return entity.template get<std::decay_t<TTag>>();
+}
+
+template <typename TTag, typename TEntity>
+auto& get(TEntity&& entity) {
+   return entity.template get<std::decay_t<TTag>>();
+}
+
 }
 
 #endif // THING_ENTITY_HPP
