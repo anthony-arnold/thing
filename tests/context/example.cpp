@@ -1,4 +1,6 @@
 #include <thing/context.hpp>
+#include <thing/ref.hpp>
+#include <thing/adapt.hpp>
 #include <fstream>
 #include <cmath>
 
@@ -41,69 +43,82 @@ void add(const float3& b, float3& out) {
 template <typename T>
 void acc(T& system) {
    for (auto& planet : system) {
-      float3 a = {};
+
+      planet.acc = float3 {};
       for (auto& planet2 : system) {
-         float3 dr = sub(thing::get<Pos>(planet2), thing::get<Pos>(planet));
+         float3 dr = sub(planet2.pos, planet.pos);
          double r2 = dr.x*dr.x + dr.y*dr.y + dr.z*dr.z + eps;
          double r = std::sqrt(r2);
          double rinv3 = 1.0 / (r*r2);
-         double mrinv3 = thing::get(planet2, Mass{}) * rinv3;
+         double mrinv3 = planet2.mass * rinv3;
 
-         add(mul(dr, mrinv3 * MPS_TO_AUPH), a);
+         add(mul(dr, mrinv3 * MPS_TO_AUPH), planet.acc);
       }
-
-      thing::get<Acc>(planet) = a;
    }
 }
 
 template <typename T>
 void kick(T& system, double dt) {
    for (auto& planet : system) {
-      add(mul(thing::get<Acc>(planet), dt),
-          thing::get(planet, Vel {}));
+      add(mul(planet.acc, dt), planet.vel);
    }
 }
 
 template <typename T>
 void drift(T& system) {
    for (auto& planet : system) {
-      add(
-         thing::get<Vel>(planet),
-         thing::get<Pos>(planet)
-         );
+      add(planet.vel, planet.pos);
    }
 }
+
+
+struct planet : thing::adaptor<thing::property<Mass, double>,
+                               thing::property<Pos, float3>,
+                               thing::property<Vel, float3>,
+                               thing::property<Acc, float3>>
+{
+   template <typename TSystem>
+   planet(thing::entity<TSystem>& e)
+      : mass(ref<Mass>(e)),
+        pos(ref<Pos>(e)),
+        vel(ref<Vel>(e)),
+        acc(ref<Acc>(e))
+   {
+   }
+
+   thing::ref<Mass, double> mass;
+   thing::ref<Pos, float3> pos;
+   thing::ref<Vel, float3> vel;
+   thing::ref<Acc, float3> acc;
+};
 
 }
 
 int main () {
-   auto system = thing::default_system<
-      thing::property<Mass, double>,
-      thing::property<Pos, float3>,
-      thing::property<Vel, float3>,
-      thing::property<Acc, float3>> {};
+   auto system = thing::adaptive_system<planet> {};
 
    // Sun, Earth, Moon
    system.resize(3);
 
-   auto it = system.begin();
-   thing::get(*it, Mass{}) = 1.0;
-   thing::get(*it, Pos{}) = float3 {};
-   thing::get(*it, Vel{}) = float3 {};
-   thing::get(*it, Acc{}) = float3 {};
-   it++;
+   auto body = system.begin();
 
-   thing::get(*it, Mass{}) = 3e-6;
-   thing::get(*it, Pos{}) = float3 { 1.0, 0.0, 0.0 };
-   thing::get(*it, Vel{}) = float3 { 0.0, 7e-4 };
-   thing::get(*it, Acc{}) = float3 { };
-   it++;
+   body->mass = 1;
+   body->pos = float3 {};
+   body->vel = float3 {};
+   body->acc = float3 {};
+   body++;
 
-   thing::get(*it, Mass{}) = 3.7e-8;
-   thing::get(*it, Pos{}) = float3 { 1.00257, 0.0, 0.0 };
-   thing::get(*it, Vel{}) = float3 { 0.0, 7.25e-4 };
-   thing::get(*it, Acc{}) = float3 { };
-   it++;
+   body->mass = 3e-6;
+   body->pos = float3 { 1. };
+   body->vel = float3 { 0., 7e-4 };
+   body->acc = float3 { };
+   body++;
+
+   body->mass = 3.7e-8;
+   body->pos = float3 { 1.00257 };
+   body->vel = float3 { 0.,  7.25e-4 };
+   body->acc = float3 { };
+   body++;
 
    auto fs = std::ofstream("example.pos");
 
@@ -114,8 +129,7 @@ int main () {
       drift(system);
 
       for (auto& planet : system) {
-         const auto& p = thing::get(planet, Pos{});
-
+         float3& p = planet.pos;
          fs << p.x << " " << p.y << " " << p.z << " ";
       }
       fs << std::endl;

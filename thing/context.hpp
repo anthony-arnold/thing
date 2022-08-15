@@ -17,7 +17,7 @@ struct context {
       using size_type = size_t;
       static constexpr size_type num_props = sizeof...(TProps);
       static_assert(num_props > 0, "System must not be empty");
-      static_assert(not detail::any_duplicates_v<TProps...>, "No duplicate tags");
+      static_assert(! detail::any_duplicates_v<TProps...>, "No duplicate tags");
 
       explicit system(size_type n = 0) {
          resize(n);
