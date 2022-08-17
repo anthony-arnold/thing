@@ -7,6 +7,30 @@
 
 namespace thing {
 
+namespace detail {
+
+template <typename T>
+struct for_each_in_tuple_t {
+
+   template <size_t Index, typename F>
+   std::enable_if_t<Index < std::tuple_size_v<T>> apply(T& tuple, F&& func) {
+      func(std::get<Index>(tuple));
+      for_each_in_tuple_t<T>::apply<Index + 1>(tuple, func);
+   }
+
+   template <size_t Index, typename F>
+   std::enable_if_t<Index == std::tuple_size_v<T>> apply(T&, F&&)
+   {
+   }
+};
+
+template <typename T, typename F>
+void for_each_in_tuple(T& tuple, F&& func) {
+   for_each_in_tuple_t<T> actor;
+   actor.template apply<0>(tuple, func);
+}
+
+}
 
 template <template<typename> typename Allocator = std::allocator>
 struct context {
@@ -29,20 +53,22 @@ struct context {
       system(system&&) = default;
 
       void resize(size_type n) {
-         auto resizer = detail::buffers_resizer<buffer_type>(n, buffers_);
-         detail::apply_properties<decltype(resizer), TProps...>(resizer);
+         detail::for_each_in_tuple(buffers_, [n](auto& buffer) {
+            buffer.resize(n);
+         });
          size_ = n;
       }
 
       void reserve(size_t n) {
-         auto reserver = detail::buffers_reserver<buffer_type>(n, buffers_);
-         detail::apply_properties<decltype(reserver), TProps...>(reserver);
+         detail::for_each_in_tuple(buffers_, [n](auto& buffer) {
+            buffer.reserver(n);
+         });
       }
 
       void clear() {
-         for(auto& buf : buffers_) {
-            buf.clear();
-         }
+         detail::for_each_in_tuple(buffers_, [](auto& buffer) {
+            buffer.clear();
+         });
       }
 
       size_type size() const {
@@ -50,25 +76,22 @@ struct context {
       }
 
       void zero() {
-         for(auto& buf : buffers_) {
-            buf.zero();
-         }
+         detail::for_each_in_tuple(buffers_, [this](auto& buffer) {
+            using value_type = typename std::decay_t<decltype(buffer)>::value_type;
+            buffer.assign(size_, value_type {});
+         });
       }
 
       template <typename TTag>
       auto data() {
          constexpr auto index = detail::index_of_tag_v<TTag, TProps...>;
-         using value_type = detail::value_type_at_t<index, TProps...>;
-
-         return buffers_[index].template data<value_type>();
+         return std::get<index>(buffers_).data();
       }
 
       template <typename TTag>
       const auto data() const {
          constexpr auto index = detail::index_of_tag_v<TTag, TProps...>;
-         using value_type = detail::value_type_at_t<index, TProps...>;
-
-         return buffers_[index].template data<value_type>();
+         return std::get<index>(buffers_).data();
       }
 
       auto begin() {
@@ -80,10 +103,8 @@ struct context {
       }
 
    private:
-      using buffer_type = buffer<Allocator>;
-
       size_type size_;
-      buffer_type buffers_[num_props];
+      buffers_t<Allocator, TProps...> buffers_;
    };
 
 };

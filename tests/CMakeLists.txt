@@ -67,7 +67,6 @@ new_test(properties/any_duplicates.cpp STATIC)
 new_test(properties/not_any_duplicates.cpp STATIC)
 new_test(properties/index_of_tag.cpp STATIC)
 new_test(properties/index_when_duplicates.cpp STATIC)
-new_test(properties/value_type_at.cpp STATIC)
 
 # Refs
 new_test(ref/ref_to.cpp)
@@ -75,3 +74,4 @@ new_test(ref/ref_assign.cpp)
 
 # Adaptor
 new_test(adapt/adapt_struct.cpp)
+new_test(adapt/adaptive_subscript.cpp)

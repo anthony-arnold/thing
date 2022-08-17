@@ -121,13 +121,20 @@ public:
    adaptive_system& operator=(adaptive_system&&) = default;
    adaptive_system(adaptive_system&&) = default;
 
-
    auto begin() {
       return adaptor_iterator(*this, 0);
    }
 
    auto end() {
       return adaptor_iterator(*this, this->size());
+   }
+
+   auto operator[](size_type index) {
+      return adaptor_type(make_entity(*this, index));
+   }
+
+   const auto operator[](size_type index) const {
+      return adaptor_type(make_entity(*this, index));
    }
 };
 

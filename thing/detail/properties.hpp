@@ -7,26 +7,7 @@
 namespace thing {
 namespace detail {
 
-template <typename...>
-struct property_actor {
-   template <typename TActor>
-   static void apply(TActor) {}
-};
-
-
-template <typename TProp, typename... TProps>
-struct property_actor<TProp, TProps...> {
-   template <typename TActor>
-   static void apply(TActor actor) {
-      actor.template operator()<TProp>();
-      property_actor<TProps...>::apply(actor);
-   }
-};
-
-template <typename TActor, typename... TProps>
-void apply_properties(TActor actor) {
-   property_actor<TProps...>::apply(actor);
-}
+/* Testing for matching tags */
 
 template <typename TPropL, typename TPropR>
 struct is_same_tag
@@ -59,6 +40,8 @@ struct any_duplicates<TProp> : std::false_type {};
 template <typename... TProps>
 inline constexpr bool any_duplicates_v = any_duplicates<TProps...>::value;
 
+/* Linear searching for the index of a tag in a list */
+
 template <typename TTag, size_t Index, typename TTag2, typename... TTail>
 struct index_of_tag_impl_2;
 
@@ -86,18 +69,6 @@ struct index_of_tag : index_of_tag_impl<TNeedle, 0, THaystack...> {};
 
 template <typename TNeedle, typename... THaystack>
 inline constexpr size_t index_of_tag_v = index_of_tag<TNeedle, THaystack...>::value;
-
-
-template <size_t Index, typename THead, typename... TTail>
-struct value_type_at : value_type_at<Index - 1, TTail...> {};
-
-template <typename THead, typename... TTail>
-struct value_type_at<0, THead, TTail...> {
-   using value_type = typename THead::value_type;
-};
-
-template <size_t Index, typename... TProps>
-using value_type_at_t = value_type_at<Index, TProps...>::value_type;
 
 }
 }
