@@ -120,7 +120,7 @@ int main () {
    body->acc = float3 { };
    body++;
 
-   auto fs = std::ofstream("example.pos");
+   auto fs = std::ofstream("three_bodies.pos");
 
    double t = 0;
    acc(system);

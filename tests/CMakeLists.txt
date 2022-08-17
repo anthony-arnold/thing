@@ -50,7 +50,6 @@ endfunction()
 new_test(context/duplicate_tags.cpp STATIC WILL_FAIL)
 new_test(context/no_properties.cpp STATIC WILL_FAIL)
 
-new_test(context/example.cpp)
 new_test(context/basic_system.cpp)
 new_test(context/system_resize.cpp)
 new_test(context/zero_system.cpp)

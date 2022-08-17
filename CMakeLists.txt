@@ -46,3 +46,4 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/thing DESTINATION include)
 
 enable_testing()
 add_subdirectory(tests)
+add_subdirectory(examples)
